@@ -28,7 +28,7 @@ f_motif.close()
 print "%d motifs were loaded.\n"%len(motifs)
 #print(motifs[:10])
 
-#load motifscan outcome from motifmatchr 
+#load motifscan outcome from motifmatchr,f1 denotes motifs 1-250, f2 denotes motifs 251-500, f3 denotes motifs 501-769 
 f1 = open('../data/motif_db/HOCOMOCO/motif_score_mat_part1.txt')
 f2 = open('../data/motif_db/HOCOMOCO/motif_score_mat_part2.txt')
 f3 = open('../data/motif_db/HOCOMOCO/motif_score_mat_part3.txt')
