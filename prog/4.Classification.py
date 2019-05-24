@@ -21,6 +21,9 @@ from keras import regularizers
 from keras.callbacks import ModelCheckpoint,Callback,EarlyStopping,History
 from keras.utils import multi_gpu_model
 from keras.optimizers import Adam, SGD
+from keras.models import model_from_json
+import tensorflow as tf
+from sklearn.metrics import average_precision_score
 
 ######################## Usage #######################
 usage='''
@@ -33,7 +36,7 @@ Usage: python 4.Classification.py [FOLD_ID] [RATIO]
 #     print usage
 #     sys.exit(1)
 ######################## Global Settings #######################
-#os.environ["CUDA_VISIBLE_DEVICES"] = sys.argv[1]
+os.environ["CUDA_VISIBLE_DEVICES"] = '0,1,2,3,4,5,6,7'
 SEQ_LEN = 1000
 NUM_TF = 769
 
@@ -89,30 +92,34 @@ def dense_block(x, stage, nb_layers, nb_filter, growth_rate, dropout_rate=None, 
 
     return concat_feat, nb_filter
 
-class EarlyStoppingByLossVal(Callback):
-    def __init__(self, monitor='loss', value=0.01, verbose=0):
-        super(Callback, self).__init__()
-        self.monitor = monitor
-        self.value = value
-        self.verbose = verbose
-        self.wait = 0
-        self.stopped_epoch = 0
-    def on_epoch_end(self, epoch, logs={}):
-        current = logs.get(self.monitor)
-        if current is None:
-            print("Early stopping requires %s available!" % self.monitor)
-            exit()
+def precision(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
+def recall(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
+def f1_score(y_true, y_pred):
+    prec = precision(y_true, y_pred)
+    recal = recall(y_true, y_pred)
+    return 2.0*prec*recal/(prec+recal+K.epsilon())
+def average_precision(y_true, y_pred):
+    return tf.py_func(average_precision_score, (y_true, y_pred), tf.double)    
 
-        if current < self.value:
-            if self.verbose > 0:
-                print("Epoch %05d: early stopping THR" % epoch)
-            self.model.stop_training = True
 class Mycallback(Callback)            :
-    def __init__(self):
-        global model
-        self.model = model
-    def on_eopch_ned(self,epoch,logs={}):
-        self.model.save_weights('%s/checkpoint/model_weights_at_epoch_%d.h5'%(DPATH,epoch))
+    def __init__(self,model):
+        self.single_model = model
+    def on_epoch_end(self,epoch,logs={}):
+        lr = self.model.optimizer.lr
+        decay = self.model.optimizer.decay
+        iterations = self.model.optimizer.iterations
+        lr_with_decay = lr / (1. + decay * K.cast(iterations, K.dtype(decay)))
+        print(K.eval(lr_with_decay))
+        self.single_model.save_weights('%s/checkpoint/model_weights_at_epoch_%d.h5'%(DPATH,epoch))
+
 class roc_callback(Callback):
     def __init__(self,validation_data,patience):
         self.x_val = validation_data[0]
@@ -245,8 +252,7 @@ def generate_batch_data(training_queue,batch_size,padding=400,bootstrap=False):
 
 
 ################################## Model Training##################################
-def model_training(parallel_model,batch_size,epochs):
-    global model
+def model_training(parallel_model,model,batch_size,epochs):
     data_queue=[]
     for idx in region_idx:
         for cellid in train_cell_idx:
@@ -254,12 +260,16 @@ def model_training(parallel_model,batch_size,epochs):
     random.shuffle(data_queue)
     train_queue = data_queue[:int(0.95*len(data_queue))]
     valid_queue = data_queue[int(0.95*len(data_queue)):]
+    print '%d training and %d validation examples'%(len(train_queue),len(valid_queue))
     steps_per_epoch = len(train_queue)/batch_size
     validation_steps = len(valid_queue)/batch_size
-    callbacks = [Mycallback(),EarlyStopping(monitor='val_loss', patience=2, verbose=1,mode='max')]
+    callbacks = [Mycallback(model),
+                 EarlyStopping(monitor='val_average_precision', patience=2, verbose=1,mode='max'),
+                 ModelCheckpoint('../data/checkpoint/best_weights.h5',monitor='val_average_precision',save_best_only=True,save_weights_only=True,mode='max')]
     training_generator = generate_batch_data(train_queue,batch_size=batch_size,padding=400,bootstrap=False)
     validation_generator = generate_batch_data(valid_queue,batch_size=batch_size,padding=400,bootstrap=False)
-    parallel_model.fit_generator(generator=training_generator,steps_per_epoch=steps_per_epoch,epochs=epochs,verbose=1,callbacks=callbacks,validation_data=validation_generator,validation_steps=validation_steps,workers=28,use_multiprocessing=True)
+    parallel_model.fit_generator(generator=training_generator,steps_per_epoch=steps_per_epoch,epochs=epochs,verbose=1,callbacks=callbacks,validation_data=validation_generator,validation_steps=validation_steps,max_queue_size=100,workers=28,use_multiprocessing=True)
+    return parallel_model, model
 
 ################################## Model Evaluation#################################
 def model_evaluation(model,region_idx,padding=400):
@@ -270,7 +280,7 @@ def model_evaluation(model,region_idx,padding=400):
         Y_test = np.zeros(len(region_idx))
         for i in range(len(region_idx)):
             info = label.index[region_idx[i]]
-            chrom,start,end = info.split(':')[0],int(info.split(':')[1].split('-')[0])-padding,int(info.split(':')[1].split('-')[1])+padding
+            chrom,start,end = info.split(':')[0],int(info.split(':')[1].split('-')[0]),int(info.split(':')[1].split('-')[1])
             sequence = genome[chrom][start:end]
             motif_idx = chrom+':'+str(start)+'-'+str(end)
             X_test_mat[i,:,:,0] = seq_to_mat(sequence)
@@ -282,19 +292,19 @@ def model_evaluation(model,region_idx,padding=400):
         fpr,tpr,_,= metrics.roc_curve(Y_test,Y_pred)
         precision,recall,_, = metrics.precision_recall_curve(Y_test,Y_pred)
         auPR = -np.trapz(precision,recall)
-        f_out = open('%s/CNN/outcome/final/classification_fold%d_seed%d.log'%(DPATH,fold_idx,int(sys.argv[4])),'a+')
-        f_out.write('%d\t%.5f\t%.5f\n'%(cellid,auROC,auPR))
+        f_out = open('%s/classification_fold%d.log'%(DPATH,fold_idx),'a+')
+        f_out.write('%.5f\t%.5f\t%.5f\n'%(precision,recall,auPR))
         f_out.close()
 
 
         
         
 if  __name__ == "__main__" :
-    DPATH='/home/liuqiao/openness_pre/expression/data'
-    genome = Fasta('/home/liuqiao/openness_pre/genome.fa')
+    DPATH='/home/liuqiao/software/DeepCAGE/data'
+    genome = Fasta('/home/liuqiao/software/DeepCAGE/data/hg19/genome.fa')
     label_file='%s/processed_RNA_DNase/union.peaks.labels'%DPATH
     tf_gexp_file = '%s/processed_RNA_DNase/tf_gexp_matrix.txt'%DPATH
-    motifscore_file = '%s/motif_db/HOCOMOCO/motif_score_mat.txt' %DPATH
+    motifscore_file = '%s/processed_RNA_DNase/motif_score_mat.txt' %DPATH
     tf_gexp = pd.read_csv(tf_gexp_file ,sep='\t',header=0,index_col=[0])
     tf_gexp_log = np.log(tf_gexp+1)
     tf_gexp_norm = pd.DataFrame.transpose(quantile_norm(pd.DataFrame.transpose(tf_gexp_log)))
@@ -308,16 +318,16 @@ if  __name__ == "__main__" :
     cellid_info = open('%s/processed_RNA_DNase/five_fold_cells.txt'%DPATH).readlines()[fold_idx]
     train_cell_idx = [int(cellid) for cellid in cellid_info.split('\t')[2].split(' ')]
     test_cell_idx = [int(cellid) for cellid in cellid_info.strip().split('\t')[4].split(' ')]
-    random.seed(1000)
+    random.seed(1234)
     region_idx = random.sample(list(range(label.shape[0])),int(label.shape[0]*ratio))
     model = model_construct()
     optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0001)
     parallel_model = multi_gpu_model(model,gpus = 8)
-    parallel_model.compile(optimizer=optimizer,loss='binary_crossentropy',metrics=['accuracy'])
+    parallel_model.compile(optimizer=optimizer,loss='binary_crossentropy',metrics=['accuracy',precision,recall,f1_score,average_precision])
     print 'Start training...'
-    model_training(parallel_model,batch_size=128*8,epochs=20)
+    parallel_model, model = model_training(parallel_model,model,batch_size=128*8,epochs=20)
     #model.save('%s/CNN/models/final/classification_fold%d_seed%d.h5'%(DPATH,fold_idx,int(sys.argv[4])))
-    #model_evaluation(model,region_idx,padding=400)
+    model_evaluation(parallel_model,region_idx,padding=400)
     
     
     
