@@ -38,7 +38,8 @@ Usage: python 4.Classification.py [FOLD_ID] [RATIO]
 ######################## Global Settings #######################
 os.environ["CUDA_VISIBLE_DEVICES"] = '0,1,2,3,4,5,6,7'
 SEQ_LEN = 1000
-NUM_TF = 769
+#NUM_TF = 769
+NUM_TF = 678
 
 
 ###################### Model Implementation #####################
@@ -287,13 +288,13 @@ def model_evaluation(model,region_idx,padding=400):
             X_test_gexp[i,:] = tf_gexp_norm.loc[cellid].values.reshape((1,-1))
             X_test_motif[i,:] = motif.loc[motif_idx].values.reshape((1,-1))
             Y_test[i] = label.iloc[region_idx[i]].loc[str(cellid)]
-        Y_pred = model.predict([X_test_mat,X_test_gexp,X_test_motif])
+        Y_pred = model.predict([X_test_mat,X_test_gexp,X_test_motif],batch_size=1024)
         auROC = metrics.roc_auc_score(Y_test, Y_pred)
         fpr,tpr,_,= metrics.roc_curve(Y_test,Y_pred)
         precision,recall,_, = metrics.precision_recall_curve(Y_test,Y_pred)
         auPR = -np.trapz(precision,recall)
         f_out = open('%s/classification_fold%d.log'%(DPATH,fold_idx),'a+')
-        f_out.write('%.5f\t%.5f\t%.5f\n'%(precision,recall,auPR))
+        f_out.write('%d\t%.5f\n'%(cellid,auPR))
         f_out.close()
 
 
@@ -303,8 +304,8 @@ if  __name__ == "__main__" :
     DPATH='/home/liuqiao/software/DeepCAGE/data'
     genome = Fasta('/home/liuqiao/software/DeepCAGE/data/hg19/genome.fa')
     label_file='%s/processed_RNA_DNase/union.peaks.labels'%DPATH
-    tf_gexp_file = '%s/processed_RNA_DNase/tf_gexp_matrix.txt'%DPATH
-    motifscore_file = '%s/processed_RNA_DNase/motif_score_mat.txt' %DPATH
+    tf_gexp_file = '%s/processed_RNA_DNase/tf_gexp_matrix_filtered.txt'%DPATH
+    motifscore_file = '%s/processed_RNA_DNase/motif_score_mat_pvalue0.001_filtered.txt' %DPATH
     tf_gexp = pd.read_csv(tf_gexp_file ,sep='\t',header=0,index_col=[0])
     tf_gexp_log = np.log(tf_gexp+1)
     tf_gexp_norm = pd.DataFrame.transpose(quantile_norm(pd.DataFrame.transpose(tf_gexp_log)))
