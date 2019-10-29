@@ -32,5 +32,32 @@ bash 1.Download_raw_data.bash  -c <CELL_ID> -r -p -b
 -p  download chromatin accessible peaks from DNase-seq data (.narrowPeak)
 -b  download chromatin accessible readscount from DNase-seq data (.bam)
 ```
-one can also run ```shell bash 1.Download_raw_data.bash  -h``` to show the script instructions.
+one can also run ```bash 1.Download_raw_data.bash  -h``` to show the script instructions. Note that `.bam` files downloading may take time. After downloading the raw data, the raw data folder will be organized by `cell-assay-experiment-file` order. See an example of the folder tree:
+
+```
+data/
+    |-- raw_data/
+    |   |-- 1/
+    |   |   |-- dseq/
+    |   |   |   |-- ENCSR000EIE/
+    |   |   |   |   |-- ENCFF953HEA.bed.gz
+    |   |   |   |   |-- ENCFF983PML.bam
+    |   |   |   |-- ENCSR000ELW/
+    |   |   |   |   |...
+    |   |   |-- rseq/
+    |   |   |   |-- ENCSR000BXY/
+    |   |   |   |   |-- ENCFF110IED.tsv
+    |   |   |   |   |-- ENCFF219FVQ.tsv
+    |   |   |   |-- ENCSR000BYH/
+    |   |   |   |   |...
+```
+
+
+
+
+
+
+
+
+
 
