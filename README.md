@@ -22,3 +22,15 @@ We provide detailed step-by-step instructions for running DeepCAGE model includi
 
 **Step 1**: Download raw DNase-seq and RNA-seq data
 
+We provided `1.Download_raw_data.sh` for download RNA-seq data (.tsv) and DNase-seq data (.narrowPeak and .bam) from the ENCODE project
+We pre-defined cell type ID from 1-60. After downloading the meta data from ENCODE website (`20180113.txt.gz`), one can run the following script:
+
+```shell
+bash 1.Download_raw_data.bash  -c <CELL_ID> -r -p -b
+-c  CELLID: pre-defined cell ID (from 1 to 60)
+-r  download RNA-seq data (.tsv)
+-p  download chromatin accessible peaks from DNase-seq data (.narrowPeak)
+-b  download chromatin accessible readscount from DNase-seq data (.bam)
+```
+one can also run ```shell bash 1.Download_raw_data.bash  -h``` to show the script instructions.
+
