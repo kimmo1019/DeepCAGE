@@ -26,7 +26,7 @@ We provide detailed step-by-step instructions for running DeepCAGE model includi
 We provided `1.Download_raw_data.sh` for download RNA-seq data (.tsv) and DNase-seq data (.narrowPeak and .bam) from the ENCODE project
 We pre-defined cell type ID from 1-60. After downloading the meta data from ENCODE website (`20180113.txt.gz`), one can run the following script:
 
-```shell
+```python
 bash 1.Download_raw_data.bash  -c <CELL_ID> -r -p -b
 -c  CELLID: pre-defined cell ID (from 1 to 60)
 -r  download RNA-seq data (.tsv)
