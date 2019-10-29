@@ -20,6 +20,7 @@ Installation has been tested in a Linux/MacOS platform.
 # Instructions
 We provide detailed step-by-step instructions for running DeepCAGE model including data preprocessing, model training, and model test.
 
+## Data preprocessing
 **Step 1**: Download raw DNase-seq and RNA-seq data
 
 We provided `1.Download_raw_data.sh` for download RNA-seq data (.tsv) and DNase-seq data (.narrowPeak and .bam) from the ENCODE project
@@ -56,15 +57,68 @@ data/
 
 We merge multiple replicate of RNA-seq data by taking the average expression of each gene across replicates in a cell type. As for DNase-seq data, we only keep bins that appear in more than half of the replicates with respect to a cell type. One can run the following scripts to merge relicates of both DNase-seq and RNA-seq data. Note that the referece genome (`hg19`) will be automatically downloaded.
 
-```shell
-python 2.Merge_multi_rep_data  -c <CELL_ID> 
--c  CELLID: pre-defined cell ID (from 1 to 60)
+```python
+python 2.Merge_multi_rep_data  <CELL_ID> 
+CELLID: pre-defined cell ID (from 1 to 60)
 ```
 The merged data (`e.g. 1.TPM.tsv and 1.peak.bins.bed`) will be located in `data/processed_RNA_DNase` folder.
 
 **Step 3**: Loci filtering and candidate regulatory regions selection
 
 Please refer to `Supplementary Figure 1` for candidate regulatory regions selection strategy. Directly run `bash 3.0.Generate_peak_bin.sh` to generate candidate regulatory regions set (`union.peaks.bed` and `union.peaks.pad1k.bed`)
+
+**Step 4**: Generating expression matrix (N x C)
+
+The TF gene expression matrix size is `N x C` where N is the number of TFs and C is the number of cell lines. 
+
+```python
+python 3.1.Generate_tf_exp.py <CELL_SET> <OUTPUT>
+CELL_SET: cell id set
+OUTPUT: output expression matrix file
+```
+**Step 5**: Generating motif score matrix (L x N)
+
+The motif score matrix size is `L x N` where L is the number of candidate regulatory loci and N is the number of the coresponding TFs.
+
+```python
+python 3.2.Generate_motif_score.py <PEAK_FILE> <MOTIF_FILE> <OUTPUT>
+PEAK_FILE: the generated union peak file in `Step 3` (e.g. `union.peaks.bed`)
+MOTIF_FILE: motif file in homer format
+OUTPUT: output motif score matrix file
+```
+**Step 6**: Generating label matrix (L x C)
+
+We provide scripts for generating both binary label matrix (classification) and continuous label matrix (regression) here.
+
+The label matrix size is `L X C` where L is the number of candidate regulatory loci and C is the number of cell lines.
+
+Use the following two scripts for generating binary label matrix
+```python
+python 3.3.Generate_label.py <PEAK_FILE> <CELL_SET> <OUTPUT> / 3.4.Generate_label.py <PEAK_FILE> <CELL_SET> <OUTPUT>
+PEAK_FILE: the generated union peak file in `Step 3` (e.g. `union.peaks.bed`)
+CELL_SET: cell id set
+OUTPUT: output label matrix file
+```
+**Step 7**: Normalizing reads count
+
+For reads count across different cell line, we normalize it by log transformation.
+```python
+python 3.5.Normalize_readscount.py <CELL_SET> <OUTPUT>
+CELL_SET: cell id set
+OUTPUT: output normalized reads count matrix file
+```
+**NOTES**: If one need to run DeepCAGE with custom data, what he/she needs to do is to generate three matrices (`TF expression matrix`, `motif score matrix` and `label matrix`) by own. 
+
+## Model implementation
+
+xxx
+
+
+
+
+
+
+
 
 
 
