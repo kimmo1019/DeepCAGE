@@ -109,9 +109,26 @@ OUTPUT: output normalized reads count matrix file
 ```
 **NOTES**: If one need to run DeepCAGE with custom data, what he/she needs to do is to generate three matrices (`TF expression matrix`, `motif score matrix` and `label matrix`) by own. 
 
-## Model implementation
+## Model training and test
 
-xxx
+We provide `4.classification.py` and `5.Regression.py` for run DeepCAGE in a classication and regression settings, respectively.
+```python
+python 4.classification.py <GPU_ID> <FOLD_ID>
+GPU_ID: GPU card id, default: 0
+FOLD_ID: cross validation fold id, from 0-4
+```
+```python
+python 5.Regression.py <GPU_ID> <FOLD_ID>
+GPU_ID: GPU card id, default: 0
+FOLD_ID: cross validation fold id, from 0-4
+```
+The model will be saved in `data/models` folder and prediction outcome will be saved in `data` folder.
+
+
+# License
+This project is licensed under the MIT License - see the LICENSE.md file for details
+
+
 
 
 
