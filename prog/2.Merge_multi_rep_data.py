@@ -4,7 +4,7 @@ import os
 usage='''
 Usage: python 2.Merge_multi_rep_data.py [CELLID]
 -- a program for merging multiple replicates data from RNA-seq and DNase-seq data
-[CELLID] : pre-defined cell ID (from 1 to 60)
+[CELLID] : pre-defined cell ID (from 1 to 55)
 '''
 if len(sys.argv)!=2:
     print usage
