@@ -1,0 +1,55 @@
+1	A549
+2	adrenal gland
+3	ascending aorta
+4	astrocyte
+5	BE2C
+6	bipolar neuron
+7	breast epithelium
+8	bronchial epithelial cell
+9	CD14-positive monocyte
+10	endothelial cell of umbilical vein
+11	epithelial cell of proximal tubule
+12	esophagus muscularis mucosa
+13	esophagus squamous epithelium
+14	fibroblast of dermis
+15	fibroblast of lung
+16	fibroblast of skin of abdomen
+17	fibroblast of the aortic adventitia
+18	foreskin fibroblast
+19	gastrocnemius medialis
+20	GM12878
+21	GM23338
+22	H1-hESC
+23	heart left ventricle
+24	HeLa-S3
+25	hepatocyte
+26	HepG2
+27	IMR-90
+28	Ishikawa
+29	K562
+30	keratinocyte
+31	kidney epithelial cell
+32	lower leg skin
+33	lung
+34	mammary epithelial cell
+35	MCF-7
+36	myotube
+37	OCI-LY7
+38	omental fat pad
+39	osteoblast
+40	Panc1
+41	pancreas
+42	Peyer's patch
+43	prostate gland
+44	right lobe of liver
+45	sigmoid colon
+46	skeletal muscle myoblast
+47	SK-N-SH
+48	smooth muscle cell
+49	spleen
+50	T47D
+51	thyroid gland
+52	tibial nerve
+53	transverse colon
+54	uterus
+55	vagina

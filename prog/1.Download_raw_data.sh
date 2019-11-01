@@ -7,14 +7,14 @@ declare -A GNMAP
 GNMAP=([hg19]=hg19 [hg38]=GRCh38)
 gname=${GNMAP['hg19']}
 #meta data from encode
-mpath="$DPATH/20180113.txt.gz"
+mpath="$DPATH/metadata.tsv"
 
 function printHelp()
 {
     echo "Usage: bash $(basename "$0") [-c CELLID] [-h] [-r] [-p] [-b] "
     echo "-- a program to download RNA-seq data(.tsv), DNase-seq data(.narrowPeak and .bam) from the Encode project (https://www.encodeproject.org)"
     echo "OPTION:"
-    echo "    -c  CELLID: pre-defined cell ID (from 1 to 60)"
+    echo "    -c  CELLID: pre-defined cell ID (from 1 to 55)"
     echo "    -h  show this help text"
     echo "    -r  download RNA-seq data (.tsv)"
     echo "    -p  download chromatin accessible peaks from DNase-seq data (.narrowPeak)"
@@ -28,7 +28,7 @@ function printHelp()
 function downloadRseq()
 {
 
-    zcat -f $mpath		|
+    cat  $mpath		|
     tail -n +2			|
     grep -P "$gname"    |
     awk -F '\t' '$5=="RNA-seq"' |
@@ -41,7 +41,7 @@ function downloadRseq()
     #sort -d	-k1,1	|
     awk  -F "\t"   	'
     {
-        print $1 "\t" $42 "\t" $40 "\t" $4
+        print $1 "\t" $43 "\t" $41 "\t" $4
     }' |
     while read line; do
         item=(${line//\\t/})
@@ -65,7 +65,7 @@ function downloadRseq()
         ` &
         sleep 1s; while [ `ps -T | grep -P "\s+curl$" | wc -l` -ge 5 ]; do sleep 1s; done
     done
-    echo RNA-seq done
+    echo RNA-seq .tsv download finished
 }
 
 
@@ -73,7 +73,7 @@ function downloadRseq()
 function downloadDseq()
 {
     #downloading Dnase-seq data
-    zcat -f $mpath		|
+    cat  $mpath		|
     tail -n +2			|
     grep -P "$gname"	|
     awk -F '\t' '$5=="DNase-seq"' |
@@ -85,7 +85,7 @@ function downloadDseq()
     #sort -d	-k1,1	  |
     awk  -F "\t"   	'
     {
-        print $1 "\t" $42 "\t" $40 "\t" $4
+        print $1 "\t" $43 "\t" $41 "\t" $4
     }' |
     while read line; do
         item=(${line//\\t/})
@@ -110,14 +110,14 @@ function downloadDseq()
         ` &  #backend (multi-process)
         sleep 1s; while [ `ps -T | grep -P "\s+curl$" | wc -l` -ge 5 ]; do sleep 1s; done
     done
-    echo DNase-seq done
+    echo DNase-seq .narrowPeak download finished
 }
 
 
 #download DNase-seq data (.bam file)
 function downloadDseqbam()
 {
-zcat -f $mpath		|
+cat  $mpath		|
 tail -n +2			|
 grep -P "$gname"	|
 grep DNase-seq |
@@ -125,12 +125,12 @@ grep bam |
 awk -F '\t' '$3=="alignments"' |
 #awk -F '\t' '$30=="1" || $30=="2"' |
 #awk -F '\t' '$30=="1"' |
-awk -F '\t' '$46=="released"' |
+awk -F '\t' '$48=="released"' |
 grep -P "$CELL"		  |
 #sort -d	-k1,1	  |
 awk  -F "\t"   	'
 {
-	print $1 "\t" $42 "\t" $40 "\t" $4
+	print $1 "\t" $43 "\t" $41 "\t" $4
 }' |
 while read line; do
 	item=(${line//\\t/})
@@ -155,7 +155,7 @@ while read line; do
 	` &  #backend (multi-process)
 	sleep 1s; while [ `ps -T | grep -P "\s+curl$" | wc -l` -ge 5 ]; do sleep 1s; done
 done
-echo DNase-seq done
+echo DNase-seq .bam download finished.
 }
 
 while getopts "c:hrpb" Option;do
@@ -166,9 +166,9 @@ while getopts "c:hrpb" Option;do
         c) 
             CELLID=$OPTARG
             CELL=$(sed -n ${CELLID}p $DPATH/cells.txt|cut -f 2)
-            mkdir -p "$DPATH/all/$CELLID"
-            Rseq="$DPATH/all/$CELLID/rseq"
-            Dseq="$DPATH/all/$CELLID/dseq"
+            mkdir -p "$DPATH/raw_data/$CELLID"
+            Rseq="$DPATH/raw_data/$CELLID/rseq"
+            Dseq="$DPATH/raw_data/$CELLID/dseq"
         ;;
         r) downloadRseq
         ;;
