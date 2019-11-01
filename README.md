@@ -24,11 +24,11 @@ We provide detailed step-by-step instructions for running DeepCAGE model includi
 **Step 1**: Download raw DNase-seq and RNA-seq data
 
 We provided `1.Download_raw_data.sh` for download RNA-seq data (.tsv) and DNase-seq data (.narrowPeak and .bam) from the ENCODE project
-We pre-defined cell type ID from 1-60. After downloading the meta data from ENCODE website (`head -n 1 files.txt|xargs -L 1 curl -O -L`), one can run the following script:
+We pre-defined cell type ID from 1-55. After downloading the meta data from ENCODE website (`head -n 1 files.txt|xargs -L 1 curl -O -L`), one can run the following script:
 
 ```python
 bash 1.Download_raw_data.bash  -c <CELL_ID> -r -p -b
--c  CELLID: pre-defined cell ID (from 1 to 60)
+-c  CELLID: pre-defined cell ID (from 1 to 55)
 -r  download RNA-seq data (.tsv)
 -p  download chromatin accessible peaks from DNase-seq data (.narrowPeak)
 -b  download chromatin accessible readscount from DNase-seq data (.bam)
@@ -59,7 +59,7 @@ We merge multiple replicate of RNA-seq data by taking the average expression of 
 
 ```python
 python 2.Merge_multi_rep_data  <CELL_ID> 
-CELLID: pre-defined cell ID (from 1 to 60)
+CELLID: pre-defined cell ID (from 1 to 55)
 ```
 The merged data (`e.g. 1.TPM.tsv and 1.peak.bins.bed`) will be located in `data/processed_RNA_DNase` folder.
 
