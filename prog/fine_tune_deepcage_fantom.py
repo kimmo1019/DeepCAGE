@@ -30,16 +30,13 @@ from sklearn.metrics import average_precision_score
 
 ######################## Usage #######################
 usage='''
-Usage: python 4.Regression.py [FOLD_ID] [RATIO]
+Usage: python fine_tune_deepcage_fantom.py [GPU_ID]
 -- a program for regression (cross cell types)
 [GPU_ID] : GPU ID (from 0 to 7)
-[FOLD_ID]: which fold (0-4)
 '''
-# if len(sys.argv)!=3:
-#     print usage
-#     sys.exit(1)
+
 ######################## Global Settings #######################
-os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+os.environ["CUDA_VISIBLE_DEVICES"] = sys.argv[1]
 SEQ_LEN = 1000
 #NUM_TF = 711
 NUM_TF = 1672
