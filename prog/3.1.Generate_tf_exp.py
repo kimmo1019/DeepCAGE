@@ -20,6 +20,7 @@ motif_db = '%s/motif_db/HOCOMOCO/HUMAN_mono_motifs_full.tsv'%DPATH
 motif_file = '%s/motif_db/HOCOMOCO/HOCOMOCOv11_full_HUMAN_mono_homer_format_0.001.motif'%DPATH
 motif2tf={item.split()[0]:item.split()[1].rstrip(';') for item in open(motif_db).readlines()[1:]}
 print '%d motif models and %d TFs found'%(len(motif2tf.keys()),len(set(motif2tf.values())))
+#769 motifs and 678 tfs
 #load motifs
 motifs=[]
 f_motif = open(motif_file)
