@@ -18,6 +18,7 @@ for each in motif_tf_match['Match2']:
     tf = each[1][0]
     motif2tf[motif]+=[tf]
 
+
 motif_set = []
 for line in open(motif_file).readlines():
     if line[0]=='>':
@@ -29,16 +30,40 @@ for each in motif_set:
         ind_motif[each] = 1
     else:
         ind_motif[each] = 0
-len(motif2tf.keys())
-len(motif_set)
-len(final_motif_set)
+print len(motif2tf.keys())#1330
+print len(motif_set)#1465
+print len(final_motif_set)#1315
+
 
 final_tf_set = []
 for each in final_motif_set:
     final_tf_set += motif2tf[each]
 final_tf_set = list(set(final_tf_set))
 final_tf_set.sort()
-len(final_tf_set)
+
+# 711 tf and corresponding motif scores
+print len(final_tf_set)
+# print final_tf_set[:10]
+# f_out = open('../data/motif_db/all_motif_rmdup_subset_711.motif','w')
+# last = 0
+# lines = open(motif_file).readlines()
+# for i in range(1,len(lines)):
+#     line = lines[i]
+#     if line[0]=='>':
+#         motif = line.split('\t')[1]
+#         print motif
+#         if motif in final_tf_set:
+#             for j in range(last, i):
+#                 f_out.write(lines[j])
+#         last = i
+# if lines[last].split('\t')[1] in final_tf_set:
+#     for each in lines[last:]:
+#         f_out.write(lines[j])
+# f_out.close()
+# sys.exit()
+        
+
+
 
 peakid2position = {item.split('\t')[3]:item.split('\t')[0]+':'+item.split('\t')[1]+'-'+item.split('\t')[2] for item in open(peak_file).readlines()}
 nb_peaks = len(peakid2position.keys())
@@ -64,7 +89,7 @@ while line!='':
        # t=time.time()
         #print seq_id,motif,score
         tfs = motif2tf[motif]
-        for each in tfs:
+        for each in tfs:#one motif may correspond to several tfs
             col_idx = col2idx[each]
             #df[each].loc[peakid2position[seq_id]] = max(score,df[each].loc[peakid2position[seq_id]])
             tf_score_mat[int(seq_id)][col_idx] = max(score,tf_score_mat[int(seq_id)][col_idx])
