@@ -80,72 +80,41 @@ def get_all_data():
     if len(match_line)>0:
         chrom_gwas, pos_gwas = match_line[0].strip().split('\t')[0],match_line[0].strip().split('\t')[1]
     epsilon = 1e-10
-    seq_data_ref,seq_data_alt =[],[]
-    gexp_data_ref,gexp_data_alt =[],[]
-    motif_data_ref,motif_data_alt=[],[]
-
+    data_ref_all,data_alt_all=[],[]
     vars_list = hkl.load(var_info)
     for var in vars_list:
         chrom, pos, ref, alt, related_donor_idx = var[0], var[1], var[2], var[3], var[4]
         if len(ref)==1 and len(alt)==1:
             seq_ref_id = 'wgs_ref_chr%s_%s_%s_%s'%(chrom,pos,ref,alt)
             seq_alt_id = 'wgs_alt_chr%s_%s_%s_%s'%(chrom,pos,ref,alt)
-            seq_mat_ref = one_hot_seq(genome[seq_ref_id])
-            seq_mat_alt = one_hot_seq(genome[seq_alt_id])
+            seq_mat_ref = one_hot_seq(genome[seq_ref_id])[np.newaxis,:]
+            seq_mat_alt = one_hot_seq(genome[seq_alt_id])[np.newaxis,:]
             motifscore_ref = tf_motifscore.loc[seq_ref_id]
             motifscore_alt = tf_motifscore.loc[seq_alt_id]
+            gexp_data_ref,gexp_data_alt =[],[]
+            motif_data_ref,motif_data_alt=[],[]
             for i in related_donor_idx:
                 gexp = tf_gexp_log.loc[muscle_tissue_ids[i]]
-                seq_data_ref.append(seq_mat_ref)
-                seq_data_alt.append(seq_mat_alt)
                 motif_data_ref.append(motifscore_ref)
                 motif_data_alt.append(motifscore_alt)
                 gexp_data_ref.append(gexp)
                 gexp_data_alt.append(gexp)
-
-    seq_data_ref=np.stack(seq_data_ref)
-    seq_data_alt=np.stack(seq_data_alt)
-    motif_data_ref=np.stack(motif_data_ref)
-    motif_data_alt=np.stack(motif_data_alt)
-    gexp_data_ref = np.stack(gexp_data_ref)
-    gexp_data_alt = np.stack(gexp_data_alt)
-    print seq_data_ref.shape,seq_data_alt.shape,motif_data_ref.shape,motif_data_alt.shape,gexp_data_ref.shape,gexp_data_alt.shape
-    np.savez('%s/height_gwas/neighbor_var/%s.ref.npz'%(DPATH,rs),seq_data_ref,motif_data_ref,gexp_data_ref)
-    np.savez('%s/height_gwas/neighbor_var/%s.alt.npz'%(DPATH,rs),seq_data_alt,motif_data_alt,gexp_data_alt)
-
-def get_seq():
-    fasta_file = '%s/height_gwas/neighbor_var/%s.fa'%(DPATH,rs)
-    genome = Fasta(fasta_file)
-    var_info = '%s/height_gwas/neighbor_var/%s.hkl'%(DPATH,rs)
-    vars_list = hkl.load(var_info)
-    seq_data_ref,seq_data_alt=[],[]
-    for var in vars_list:
-        chrom, pos, ref, alt, related_donor_idx = var[0], var[1], var[2], var[3], var[4]
-        if len(ref)==1 and len(alt)==1:
-            seq_ref_id = 'wgs_ref_chr%s_%s_%s_%s'%(chrom,pos,ref,alt)
-            seq_alt_id = 'wgs_alt_chr%s_%s_%s_%s'%(chrom,pos,ref,alt)
-            seq_mat_ref = one_hot_seq(genome[seq_ref_id])
-            seq_mat_alt = one_hot_seq(genome[seq_alt_id])
-            for i in related_donor_idx:
-                seq_data_ref.append(seq_mat_ref)
-                seq_data_alt.append(seq_mat_alt)
-
-    seq_data_ref=np.stack(seq_data_ref)
-    seq_data_alt=np.stack(seq_data_alt)
-    print seq_data_ref.shape,seq_data_alt.shape
-    np.save('%s/height_gwas/neighbor_var/%s.seq.npy'%(DPATH,rs),seq_data_ref)
-    np.save('%s/height_gwas/neighbor_var/%s.seq.npy'%(DPATH,rs),seq_data_alt)
+            motif_data_ref=np.stack(motif_data_ref)
+            motif_data_alt=np.stack(motif_data_alt)
+            gexp_data_ref = np.stack(gexp_data_ref)
+            gexp_data_alt = np.stack(gexp_data_alt)
+            data_ref_all.append([seq_mat_ref,motif_data_ref,gexp_data_ref])
+            data_alt_all.append([seq_mat_alt,motif_data_alt,gexp_data_alt])
+    hkl.dump([data_ref_all,data_alt_all],'%s/height_gwas/neighbor_var/%s.ref_alt.hkl'%(DPATH,rs))
 
 
 if __name__=="__main__":
     DPATH='/home/liuqiao/software/DeepCAGE/data'
-    genome = Fasta('/home/liuqiao/openness_pre/genome.fa')
     height_GWAS='%s/height_gwas/Meta-analysis_Wood_et_al+UKBiobank_2018_top_3290_from_COJO_analysis.txt'%DPATH
     GWAS_variants = '%s/height_gwas/neighbor_var'%DPATH
     rs, chrom_gwas, pos_gwas, test_allele, other_allele = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
     #get_data(use_indel=False)#generate fasta
-    #get_all_data()#seq_mat, gexp, and motifscore
-    get_seq()#only seq_mat
+    get_all_data()#seq_mat, gexp, and motifscore
 
     
 
