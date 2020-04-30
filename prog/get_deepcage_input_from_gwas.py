@@ -107,6 +107,32 @@ def get_all_data():
             data_alt_all.append([seq_mat_alt,motif_data_alt,gexp_data_alt])
     hkl.dump([data_ref_all,data_alt_all],'%s/height_gwas/neighbor_var/%s.ref_alt.hkl'%(DPATH,rs))
 
+def get_causal_score(rs):
+    genotype_head_file = '%s/GTEx/GTEx_WGS_genotype_first500.txt' %DPATH
+    muscle_info = '%s/GTEx/GTEx_rnaseq_mucsle.txt'%DPATH
+    first500 = open(genotype_head_file).readlines()
+    line = first500[1].strip().split('\t')
+    donor_muscle_ids = [item.split('\t')[0] for item in open(muscle_info).readlines()]
+    donor_ids = ['-'.join(item.rstrip().split('-')[:2]) for item in donor_muscle_ids]
+    muscle_tissue_ids=[donor_muscle_ids[donor_ids.index(item)] for item in line[9:] if item in donor_ids]
+
+    Y_pred_ref,Y_pred_alt = hkl.load('%s/height_gwas/neighbor_var/%s.score.hkl'%(DPATH,rs))
+    var_info = '%s/height_gwas/neighbor_var/%s.hkl'%(DPATH,rs)
+    vars_list = hkl.load(var_info)
+    rs2info = {item.split('\t')[0]:item.split('\t')[1:5] for item in open(height_GWAS).readlines()[1:]}
+    pos_wgas = rs2info[rs][1]
+    score_mat = np.zeros((len(muscle_tissue_ids),len(vars_list)))
+    idx=0
+    epsilon=1e-10
+    columns = ['_'.join([item[0],str(item[1]),item[2],item[3]]) for item in vars_list]
+    for var in vars_list:
+        chrom, pos, ref, alt, related_donor_idx = var[0], var[1], var[2], var[3], var[4]
+        if len(ref)==1 and len(alt)==1:
+            for i in related_donor_idx:
+                score_mat[i][vars_list.index(var)] = abs(np.log2(abs(Y_pred_ref[idx,0]*1.0/Y_pred_alt[idx,0])+epsilon))
+                idx+=1
+    pd_data = pd.DataFrame(score_mat,index=muscle_tissue_ids,columns=columns)
+    pd_data.to_csv('%s/height_gwas/neighbor_var/%s.causal_score.csv'%(DPATH,rs),sep='\t')
 
 if __name__=="__main__":
     DPATH='/home/liuqiao/software/DeepCAGE/data'
@@ -114,7 +140,10 @@ if __name__=="__main__":
     GWAS_variants = '%s/height_gwas/neighbor_var'%DPATH
     rs, chrom_gwas, pos_gwas, test_allele, other_allele = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
     #get_data(use_indel=False)#generate fasta
-    get_all_data()#seq_mat, gexp, and motifscore
+    #get_all_data()#seq_mat, gexp, and motifscore
+    get_causal_score(rs)
+
+
 
     
 
