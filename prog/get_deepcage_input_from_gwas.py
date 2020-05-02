@@ -131,8 +131,14 @@ def get_causal_score(rs):
             for i in related_donor_idx:
                 score_mat[i][vars_list.index(var)] = abs(np.log2(abs(Y_pred_ref[idx,0]*1.0/Y_pred_alt[idx,0])+epsilon))
                 idx+=1
+    
     pd_data = pd.DataFrame(score_mat,index=muscle_tissue_ids,columns=columns)
-    pd_data.to_csv('%s/height_gwas/neighbor_var/%s.causal_score.csv'%(DPATH,rs),sep='\t')
+    #pd_data.to_csv('%s/height_gwas/neighbor_var/%s.causal_score.csv'%(DPATH,rs),sep='\t')
+
+    columns_filter = [item for item in columns if np.max(pd_data[item])>1]
+    if len(columns_filter)>0:
+        pd_data_filter = pd_data[columns_filter]
+        pd_data_filter.to_csv('%s/height_gwas/neighbor_var/%s.causal_score_thred1.csv'%(DPATH,rs),sep='\t')
 
 if __name__=="__main__":
     DPATH='/home/liuqiao/software/DeepCAGE/data'
