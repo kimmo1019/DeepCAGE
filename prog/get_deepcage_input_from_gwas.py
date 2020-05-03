@@ -55,7 +55,7 @@ def get_data(use_indel):
         f_out.write('\n')
     f_out.close()
     f_gwas.close()
-        
+  
 def get_all_data():
     genotype_head_file = '%s/GTEx/GTEx_WGS_genotype_first500.txt' %DPATH
     muscle_info = '%s/GTEx/GTEx_rnaseq_mucsle.txt'%DPATH
@@ -68,7 +68,9 @@ def get_all_data():
     tf_gexp_file = '%s/GTEx/GTEx_rseq_tpm_peca.csv'%DPATH
     tf_gexp = pd.read_csv(tf_gexp_file ,sep='\t',header=0,index_col=[0])
     tf_gexp_log = np.log(tf_gexp+1)
-    tf_gexp_log = pd.DataFrame.transpose(quantile_norm(pd.DataFrame.transpose(tf_gexp_log)))
+    tf_gexp_log = pd.DataFrame.transpose(pd.DataFrame.transpose(tf_gexp_log).rank(method='min').stack().astype(int).map(rank_mean).unstack())
+    #tf_gexp_log = pd.DataFrame.transpose(quantile_norm(pd.DataFrame.transpose(tf_gexp_log)))
+
 
     fasta_file = '%s/height_gwas/neighbor_var/%s.fa'%(DPATH,rs)
     genome = Fasta(fasta_file)
@@ -144,10 +146,16 @@ if __name__=="__main__":
     DPATH='/home/liuqiao/software/DeepCAGE/data'
     height_GWAS='%s/height_gwas/Meta-analysis_Wood_et_al+UKBiobank_2018_top_3290_from_COJO_analysis.txt'%DPATH
     GWAS_variants = '%s/height_gwas/neighbor_var'%DPATH
+    tf_gexp_train_file = '%s/encode/preprocessed/tf_gexp.csv'%DPATH
+    tf_gexp_train = pd.read_csv(tf_gexp_train_file ,sep='\t',header=0,index_col=[0])
+    tf_gexp_train_log = np.log(tf_gexp_train+1)
+    rank_mean = pd.DataFrame.transpose(tf_gexp_train_log).stack().groupby(pd.DataFrame.transpose(tf_gexp_train_log).rank(method='first').stack().astype(int)).mean()
+    #tf_gexp_train_log = pd.DataFrame.transpose(quantile_norm())
+
     rs, chrom_gwas, pos_gwas, test_allele, other_allele = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
     #get_data(use_indel=False)#generate fasta
-    #get_all_data()#seq_mat, gexp, and motifscore
-    get_causal_score(rs)
+    get_all_data()#seq_mat, gexp, and motifscore
+    #get_causal_score(rs)
 
 
 
