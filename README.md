@@ -122,7 +122,7 @@ python 5.Regression.py <GPU_ID> <FOLD_ID>
 GPU_ID: GPU card id, default: 0
 FOLD_ID: cross validation fold id, from 0-4
 ```
-The model will be saved in `data/models` folder and prediction outcome will be saved in `data` folder.
+Note that the deault setting will be multi-gpu model. The trained model will be saved in `data/models` folder and prediction outcome will be saved in `data` folder.
 
 
 # License

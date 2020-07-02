@@ -329,6 +329,7 @@ if  __name__ == "__main__" :
     region_idx = random.sample(list(range(readscount.shape[0])),int(readscount.shape[0]*ratio))
     model = model_construct()
     optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0000)
+    #nb_gpus=8
     parallel_model = multi_gpu_model(model,gpus = 8)
     parallel_model.compile(optimizer=optimizer,loss='mean_squared_error',metrics=['mse'])
     print 'Start training...'
