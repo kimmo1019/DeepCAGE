@@ -21,6 +21,7 @@ def one_hot_seq(seq):
 
 
 def get_data(use_indel):
+    #generate sequence, fasta
     f_gwas = open('%s/height_gwas/neighbor_var/%s.log'%(DPATH,rs),'w')
     f_out = open('%s/height_gwas/neighbor_var/%s.fa'%(DPATH,rs),'w')
     #snp direction, tested allele and other allele, sometimes the ref is the former and sometimes the later
@@ -43,6 +44,7 @@ def get_data(use_indel):
         if not use_indel:
             if len(ref)>1 or len(alt)>1:
                 continue
+        #
         seq_ref = genome['chr'+chrom][int(pos)-SEQ_LEN/2:int(pos)-1]+ref+genome['chr'+chrom][int(pos):int(pos)+SEQ_LEN/2]
         seq_alt = genome['chr'+chrom][int(pos)-SEQ_LEN/2:int(pos)-1]+alt+genome['chr'+chrom][int(pos):int(pos)+SEQ_LEN/2]
         assert len(seq_ref)>=SEQ_LEN
@@ -125,7 +127,7 @@ def get_causal_score(rs):
     pos_wgas = rs2info[rs][1]
     score_mat = np.zeros((len(muscle_tissue_ids),len(vars_list)))
     idx=0
-    epsilon=1e-10
+    epsilon=1e-100
     columns = ['_'.join([item[0],str(item[1]),item[2],item[3]]) for item in vars_list]
     for var in vars_list:
         chrom, pos, ref, alt, related_donor_idx = var[0], var[1], var[2], var[3], var[4]
@@ -154,8 +156,8 @@ if __name__=="__main__":
 
     rs, chrom_gwas, pos_gwas, test_allele, other_allele = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
     #get_data(use_indel=False)#generate fasta
-    get_all_data()#seq_mat, gexp, and motifscore
-    #get_causal_score(rs)
+    #get_all_data()#seq_mat, gexp, and motifscore
+    get_causal_score(rs)
 
 
 

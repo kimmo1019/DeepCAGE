@@ -81,7 +81,8 @@ def extract_peca_tf_expr():
 
     print tf_count
     pd_gtex_rseq = pd.DataFrame(data_gtex,index=sample_ids,columns=tf_names)
-    pd_gtex_rseq.to_csv('%s/GTEx/GTEx_rseq_tpm_peca.csv'%DPATH,sep='\t')
+    pd_gtex_rseq.to_csv('%s/GTEx/GTEx_WGS_vcf.txt.csv'%DPATH,sep='\t')
+    #without normalization
 
 def find_wgs_vars(snp):
     #chrom, pos, ref, alt = snp[0], int(snp[1]), snp[2], snp[3]
